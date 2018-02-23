@@ -41,3 +41,14 @@ Dans la fenêtre _Configuring the terminal emulator to use with Git Bash_ laisse
 
 Dans la fenêtre _Configuring extra options_ laissez par défault et cliquez sur **_Next_**  
 ![Configuring extra options](/img/git-010.png)  
+
+### Procédure de configuration
+La procédure de confiuguration de _Git for Windows_ sur _Windows 10_ se déroule de la façon suivante :  
+
+Commencez par éxécuter les deux commandes suivantes :
+```java
+git config --global user.email "prenom.nom@gmail.com"
+git config --global user.name "GitHub account name"
+```
+
+Editez ensuite le fichier ~/.gitconfig avec le fichier [gitconfig](./gitconfig)
