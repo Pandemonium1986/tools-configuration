@@ -263,6 +263,217 @@ Docker Machine is a tool that lets you install Docker Engine on virtual hosts, a
 Using docker-machine commands, you can start, inspect, stop, and restart a managed host, upgrade the Docker client and daemon, and configure a Docker client to talk to your host.
 
 #### Katacoda : Get Started
+##### Scénario 1 Deploying Your First Docker Container
+**Ce qu'il faut retenir :**  
+Pour chercher une image sur un registry on utilise la commande `docker search`.  
+Un simple `docker run -d nom-de-l'image` permet de "tirer" une image depuis un repository et de "démarrer" un container en mode démon.  
+`docker inspect <friendly-name|container-id>` donne les détails du container.  
+`docker logs <friendly-name|container-id>` donne les logs du container.  
+`docker run -d --name <friendly-name> -p <host-port>:<container-port> <image>:<tag>` "tire" l'image depuis un repository "démarre" un container en mode démon via un mapping de port entre l'host et le container. On peut manager le container via le friendly-name.  
+`docker run -d --name <friendly-name> -p <container-port> <image>:<tag>` "tire" l'image depuis un repository "démarre" un container en mode démon via un mapping de port dynamique. On peut manager le container via le friendly-name.  
+`docker port <friendly-name> <container-port>` permet de connaitre le port dynamique utilisé.  
+`docker run -d --name redisMapped -v /opt/docker/data/redis:/data redis` permet de persister les données de redis dans _/opt/docker/data/redis_.  
+`docker run ubuntu ps` éxécute le container ubuntu et effectue la commande ps dans celui-ci.  
+`docker run -it ubuntu bash` éxécute le container ubuntu et ouvre un shell.  
+
+##### Scénario 2 Deploy Static HTML Website as Container
+Créer une "image" pour l'instancier comme un "container" cela revient à partir d'une image éxistante et à l'enrichir.  
+Pour cela on va créer un fichier _Dockerfile_ qu'on va "builder".  
+Pour builder "l'image" on va utiliser la comamnde `docker build -t <friendly-name>:<tag> path_to_Dockerfile`.  
+On peut voir "l'image" précédemment créé via la commande `docker images`.  
+Pour instancier "l'image" en "container" on utilise la commande `docker run -d -p <host-port>:<container-port> <friendly-name>:<tag>`.  
+
+##### Scénario 3 Building Container Images
+Tout  _Dockerfile_ doit démarrer depuis la commande `FROM <image-name>:<tag>` qu'on appel une "base image".  
+On peut utiliser les commandes _RUN ou COPY_ au sein de notre  _Dockerfile_.  
+_RUN_ permet d'éxécuter une qqcnq commande. Par exemple on peut installer qqch ou compiler qqch.  
+_COPY_ permet de copier des fichiers du repertoire où se situe le  _Dockerfile_ dans le container.  
+La commande _EXPOSE_ permet de définir le/les port(s) d'exposition du container.  
+La commande _CMD_ définit ce que fait le container au démarrage. On l'utilise de de la manière suivante `CMD ["nginx","-g","daemon off;"]`.  
+On peut aussi utiliser la commande _ENTRYPOINT_ à la place de  _CMD_. Là où _CMD_ peux être surchargé au démarrage du container, _ENTRYPOINT_ définit une commande qui à des arguments qu'on peux passer en ligne de commande.
+
+```docker
+# This is your Editor pane. Write the Dockerfile here and
+# use the command line to execute commands
+# use the command line to execute commands
+FROM nginx:1.11-alpine
+COPY ./index.html /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx","-g","daemon off;"]
+```
+
+##### Scénario 4 Dockerizing Node.js
+En cas de rebuild d'une image, Docker garde en cache tout ce qu'il s'est passé.  
+Si une modification survient dans les fichiers contenus dans le _Dockerfile_ alors il ne rebuildera que ce qui précède la ligne du _Dockerfile_ en question.  
+Cela nécessité d'orchestrer son _Dockerfile_ correctement.  
+>With NPM we only want to re-run npm install if something within our package.json file has changed. If nothing has changed then we can use the cache version to speed up deployment. By using `COPY package.json <dest>` we can cause the RUN npm install command to be invalidated if the package.json file has changed. If the file has not changed, then the cache will not be invalided, and the cached results of the npm install command will be used.  
+
+On peux s'affranchir du cache via l'option suivante de la commande build : `-no-cache=true`.  
+
+##### Scénario 5 Optimise Builds With Docker OnBuild
+La commande "ONBUILD" permet de définir des actions à éxécuter plus tard. Cette instruction est pratique dès qu'on souhaite builder une image qui sera utilisé comme "base image".
+```
+FROM node:7
+RUN mkdir -p /usr/src/app
+WORKDIR /usr/src/app
+ONBUILD COPY package.json /usr/src/app/
+ONBUILD RUN npm install
+ONBUILD COPY . /usr/src/app
+CMD [ "npm", "start" ]
+
+FROM node:7-onbuild
+EXPOSE 3000
+```
+##### Scénario 6 Ignoring Files During Build
+Pour ignorer des fichiers au cours du build il suffit d'ajouter à la racine du répertoire un fichier _.dockerignore_. Ce fichier est similaire au fichier _.gitignore_.  
+Au passage on peux éxécuter une commande dans le container via le passage de celle-ci après la commande run comme ceci `docker run nopassword ls /app`.  
+Une bonne pratique consiste à ignorer le dossier `.git`.  
+
+##### Scénario 7 Create Data Containers
+On peux créer des container de données qu'on appel des _data containers_.  
+Pour créer un _data containers_, on utilise la commande `docker create -v /config --name dataContainer busybox`.  
+L'option -v permet de connaitre le répertoire "rw".  
+Pour copier des donner dans le container on utilise la commande `docker cp config.conf dataContainer:/config/`.  
+Pour éxécuter un autre container qui "map" le _data container_ on utilise la commande `docker run --volumes-from dataContainer ubuntu ls /config`.  
+Pour exporter le _data container_ on utilise la commande `docker export dataContainer > dataContainer.tar`.  
+
+##### Scénario 8 Creating Networks Between Containers using Links
+On peut créer des liens entre les containers pour faire communiquer deux service par exemple.  
+On commence par éxécuter un container cible par exemple `docker run -d --name redis-server redis`.  
+Pour créer un lien on utilise la commande suivante : `docker run --link <container-cible|id>:<alias> <container-source>`.  
+On peux via la commande précédante connecter une interface client à son serveur.  
+Dans le cas de Redis `docker run -it --link redis-server:redis redis redis-cli -h redis`.  
+Ce qui est important dans tous ça c'est de comprendre ce qu'il se passe quand docker créé un lien.  
+Tout d'abbord il maj les variables d'environment de la machine source avec un certain nombre d'informations de la machine cible. Deuxiemement il met à jour le fichier /etc/hosts de la machine source avec les informations de la machine cible.  
+
+##### Scénario 9 Creating Networks Between Containers using Networks
+A la différence des liens un _docker network_ s'apparente à un "réseau virtuel" entre les containers.  
+Pour créer un _docker network_ on utilise la commande `docker network create backend-network`.  
+Pour attacher un container à ce _docker network_ on utilise l'option `--net <nom_du_rez>` ex : `docker run -d --name=redis --net=backend-network redis`.  
+Quand on attache des containers à un _docker network_ ceux-ci vont automatiquement partager leurs informations via le DNS embarqué dans docker. On peux voir ce DNS via la commande suivante `docker run --net=backend-network alpine cat /etc/resolv.conf`.  
+On peux attacher un container à un nouveau _docker network_ via la commande `docker network connect frontend-network redis`.  
+On peux voir les _docker network_ via la commande `docker network ls`.  
+Pour savoir quel container est rattaché à quel _docker network_ on utilise la commande `docker network inspect frontend-network`.  
+On peux déconnecter les containers connecté au _docker network_ via la commande `docker network disconnect frontend-network redis`.  
+
+##### Scénario 10 Persisting Data Using Volumes
+Pour qu'un container persiste ses donner il faut les exporter dans un volume non-volatile (en dehors d'un qqcnq container).  
+On utilise l'option "-v" de `docker run` pour spécifier le volume "mapper" qui va contenir les données persistées.  
+Par exemple : `docker run  -v /docker/redis-data:/data --name r1 -d redis redis-server --appendonly yes`.  
+On peut "pipe" les données dans le container via la commande suivant : `cat data | docker exec -i r1 redis-cli --pipe`.  
+On peut aussi "mapper" le volume d'un container A avec celui d'un container via l'option `--volume-from`.  
+Par ex : `docker run --volumes-from r1 -it ubuntu ls /data`.  
+On peut monter un volume avec des options comme dans l'exemple suivant : `docker run -v /docker/redis-data:/data:ro -it ubuntu rm -rf /data`.  
+
+##### Scénario 11 Manage Container Log Files
+Les logs d'un container sont accessibles via la commande `docker logs <container-name|id>`.  
+Au démarrage d'un container on peut choisir son "log-driver" via l'option `--log-driver=`.  
+Par ex : `docker run -d --name redis-syslog --log-driver=syslog redis`.  
+On peut désactiver les logs d'un container via l'option `--log-driver=none`.  
+Par ex : `docker run -d --name redis-none --log-driver=none redis`.  
+Pour connaitre la configuration des logs on utilise la comamnde suivante : `docker inspect --format '{{ .HostConfig.LogConfig }}' redis-server`.  
+
+##### Scénario 12 Ensuring Container Uptime With Restart Policies
+Un container peut comme n'importe quel process "planter". Docker via l'option `--restart` spécifer le nombre de redémarrage avant un véritable crash.  
+Par exemple pour redémarrer 3 fois le container on utilise la commande : `docker run -d --name restart-3 --restart=on-failure:3 scrapbook/docker-restart-example`.  
+Pour redémarrer le container quoi qu'il arrive on utilisera la commande suivante : `docker run -d --name restart-always --restart=always scrapbook/docker-restart-example`.  
+
+##### Scénario 13 Adding Docker Metadata & Labels
+On peut ajouter un certain nombre de metadata dans des containers ou des images.  
+Les metadata sont gérées via ce qu'on appel des labels.  
+Pour ajouter un label au démarrage d'un container on utilise l'option `-l=<value>` de la commande `docker run`. Par exemple : `docker run -l user=12345 -d redis`.  
+On peut ajouter un fichier entier contenant des lables via  `docker run --label-file=labels -d redis`.  
+On peut créer des labels dans une image directement via le _Dockerfile_ via la commande `LABEL`.  
+```
+LABEL vendor=Katacoda
+LABEL vendor=Katacoda \ com.katacoda.version=0.0.5 \ com.katacoda.build-date=2016-07-01T10:47:29Z \ com.katacoda.course=Docker
+```
+Pour connaitre les labels d'une image ou d'un container on utilise la commande `docker inspect rd`.  
+On peut alors "filtrer" les containers ou les images sur des labels via l'option `--filter`. Par exemple `docker ps --filter "label=user=scrapbook"` ou encore `docker images --filter "label=vendor=Katacoda"`.  
+Pour ajouter des labels directement dans le démon unix :
+```
+docker -d \
+-H unix:///var/run/docker.sock \
+--label com.katacoda.environment="production" \
+--label com.katacoda.storage="ssd"
+```
+##### Scénario 14 Load Balancing Containers
+Ce scénario utilise un container spécifique "nginx_proxy" pour proxyfier et load-balancer des containers web. Le seul intérêt de ce tuto est qu'il aborde la notion de "Service Discovery" via les "Docker's API.".  
+
+##### Scénario 15 Orchestration using Docker Compose
+Docker Compose permet d'orchestrer des applications mutli-containers.  
+Docker Compose est basé sur un fichier yaml _docker-compose.yml_ qui à la forme suivante.  
+```yaml
+container_name:
+  property: value
+    - or options
+```
+Pour démarrer l'application on utilise la commande `docker-compose up -d`.  
+Pour voir les containers démarré on utilise la commande `docker-compose ps`.  
+Pour accéder au log `docker-compose log`.  
+Pour scaler un service précis on utilise la commande suivante : `docker-compose scale web=3`.  
+Pour arréter une application on utilisera `docker-compose stop`.  
+Pour supprimer tous les containers `docker-compose rm`.  
+Attention docker-compose n'est pas la meme chose que docker stack (voir le lien suivant https://nickjanetakis.com/blog/docker-tip-23-docker-compose-vs-docker-stack )
+
+##### Scénario 16 See Container Metrics With Docker Stats
+Pour connaitre les métrics d'un container on utilise la commande `docker stats nginx`.  
+Pour connaitre les métrics de plusieurs containers on utilise la commande `docker ps -q | xargs docker stats`.  
+
+
+##### Scénario 17 Creating Optimised Docker Images using Multi-Stage Builds
+>The Multi-Stage feature allows a single Dockerfile to contain multiple stages in order to produce the desired, optimised, Docker Image.  
+Previously, the problem would have been solved with two Dockerfiles. One file would have the steps to build the binary and artifacts using a development container, the second would be optimised for production and not include the development tools.  
+By removing development tooling in the production image, you reproduce the attack surface and improve the deployment time.  
+
+Un exemple de fichier Multi-Stage.
+```Dockerfile
+# First Stage
+FROM golang:1.6-alpine
+
+RUN mkdir /app
+ADD . /app/
+WORKDIR /app
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
+
+# Second Stage
+FROM alpine
+EXPOSE 80
+CMD ["/app"]
+
+# Copy from first stage
+COPY --from=0 /app/main /app
+```
+Pour Builder l'image on utilise la commande suivant `docker build -f Dockerfile.multi -t golang-app .`
+
+##### Scénario 18 Formatting PS Output
+On peux formatter la sortie de `docker ps` via l'option ` --format`.  
+`docker ps --format '{{.Names}} container is using {{.Image}} image'`.  
+`docker ps --format 'table {{.Names}}\t{{.Image}}'`.  
+`docker ps -q | xargs docker inspect --format '{{ .Id }} - {{ .Name }} - {{ .NetworkSettings.IPAddress }}'`.  
+
+##### Scénario 19 Learn Docker Swarm
+On peux "clusteriser" docker avec le mode _Swarm_.  
+On démarre un cluster _Swarm_ avec la commande `docker swarm init`.  
+Le premier cluster devient un cluster "manager" il renseigne un token qu'il faut garder dans un endroit sécurisé. Ce token permet aux autres "node" de s'enregistrer au cluster.  
+Depuis un "node" externe au cluster, on peut utiliser la commande suivante pour récupérer le token :
+`token=$(docker -H 172.17.0.33:2345 swarm join-token -q worker) && echo $token`.  
+on rejoit alors le cluster avec la commande suivante :
+`docker swarm join 172.17.0.33:2377 --token $token`.  
+Pour connaitre la liste des "nodes" qui composent le cluster on utilise la commande `docker node ls` depuis le "master".
+
+Le mode _Swarm_ déploie un model de réseau nouveau et plus robuste, permettant le dialogue et la scalabilité entre chaque "node" du cluste.  
+Pour créer un reseau "overlay" dans le cluster swarm on utilise la commande : `docker network create -d overlay skynet` depuis le "master".  
+
+Le mode _Swarm_ ajoute la notion de "service" qui est "au dessus" du container. Celle-ci permet de défnir un ou plusieurs container composant un "service" avec des règles de deploiement de réplication de scalabilité ...  
+Dans cet exemple on va créer un service qui contient deux serveur http. Ceux-ci sont automatiquement répliqué et load balancé sur l'ensemble du cluster swarm. `docker service create --name http --network skynet --replicas 2 -p 80:80 katacoda/docker-http-server`.  
+Pour connaitre les services en cours on utilise la commande `docker service ls` depuis le "master".  
+Pour connaitre l'état d'un service en particulier `docker service ps <service_name>`.  
+Pour inspecter un service en particulier `docker service inspect --pretty <service_name>`.  
+Pour connaitre les containers du "node" `docker node ps self`.  
+Depuis le master pour connaitre les containers d'un "node" `docker node ps $(docker node ls -q | head -n1)`.  
+Pour scaler le nombre d'instance d'un service en cli : `docker service scale <service_name>=<nombre_d'instance>` ex : `docker service scale http=5`
+
 
 ### Source
 [Get Docker](https://docs.docker.com/install/)  
@@ -270,3 +481,4 @@ Using docker-machine commands, you can start, inspect, stop, and restart a manag
 [Post-installation steps for Linux](https://docs.docker.com/install/linux/linux-postinstall/)  
 [Get Started](https://docs.docker.com/get-started/)  
 [Docker Machine](https://docs.docker.com/machine/overview/)
+[Katacoda Docker](https://www.katacoda.com/courses/docker)
