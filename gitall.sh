@@ -9,8 +9,8 @@
 ####################
 
 #-- Environment Variables
-GIT_HOME="/d/git"
-IVVQ="evo-XXXX-ivvq"
+GIT_HOME="/home/pandemonium/git/"
+IVVQ="develop"
 
 #-- Color Variables
 red=$'\e[1;31m'
@@ -126,7 +126,7 @@ gitStatus(){
 		COMMIT_STATUS=`git st -sb | sed -n "s/^##.*\[\([^]]*\).*$/\1/p"`
 		COMMIT_STATUS=`colorCommit $COMMIT_STATUS`
 	fi
-	printf "|%-22s|%-17s|%-31s|\n" `basename $GIT_FOLDER` "${CHANGE_STATUS}" "${COMMIT_STATUS}"
+	printf "|%-28s|%-17s|%-31s|\n" `basename $GIT_FOLDER` "${CHANGE_STATUS}" "${COMMIT_STATUS}"
 }
 
 #-- gitFetch
@@ -138,7 +138,7 @@ gitFetch(){
 	else
 		FETCH_STATUS="${cyn}No need${end}"
 	fi
-	printf "|%-22s|%-18s|\n" `basename $GIT_FOLDER` "${FETCH_STATUS}"
+	printf "|%-28s|%-18s|\n" `basename $GIT_FOLDER` "${FETCH_STATUS}"
 }
 
 #-- gitMerge
@@ -164,10 +164,10 @@ gitMerge(){
 		else
 			MERGE_STATUS="${red}Error${end}"
 		fi
-		printf "|%-22s|%-27s|\n" `basename $GIT_FOLDER` "${MERGE_STATUS}"
+		printf "|%-28s|%-27s|\n" `basename $GIT_FOLDER` "${MERGE_STATUS}"
 	else
 		MERGE_RETURN="${mag}No $BRANCH${end}"
-		printf "|%-22s|%-27s|\n" `basename $GIT_FOLDER` "${MERGE_RETURN}"
+		printf "|%-28s|%-27s|\n" `basename $GIT_FOLDER` "${MERGE_RETURN}"
 	fi
 }
 
@@ -184,27 +184,27 @@ gitRemoteBranch(){
 	else
 		HAS_IVVQ="${red}No${end}"
 	fi
-	printf "|%-22s|%-25s|%-24s|\n" `basename $GIT_FOLDER` "${REMOTE_BRANCH}" "${HAS_IVVQ}"
+	printf "|%-28s|%-25s|%-24s|\n" `basename $GIT_FOLDER` "${REMOTE_BRANCH}" "${HAS_IVVQ}"
 }
 
 #-- execGitStatus
 # Execute gitStatus.
 execGitStatus(){
-	echo -e "----------------------------------------------------"
-	printf "|%-22s|%-6s|%-20s|\n" "Projet" "Change" "Commit"
-	echo -e "----------------------------------------------------"
+	echo -e "----------------------------------------------------------"
+	printf "|%-28s|%-6s|%-20s|\n" "Projet" "Change" "Commit"
+	echo -e "----------------------------------------------------------"
 	browse gitStatus
-	echo -e "----------------------------------------------------"
+	echo -e "----------------------------------------------------------"
 }
 
 #-- execGitFetch
 # Execute gitFetch.
 execGitFetch(){
-	echo -e "--------------------------------"
-	printf "|%-22s|%-7s|\n" "Projet" "Fecth"
-	echo -e "--------------------------------"
+	echo -e "--------------------------------------"
+	printf "|%-28s|%-7s|\n" "Projet" "Fecth"
+	echo -e "--------------------------------------"
 	browse gitFetch
-	echo -e "--------------------------------"
+	echo -e "--------------------------------------"
 	return 0
 }
 
@@ -215,22 +215,22 @@ execGitMerge(){
 		echo "Error : "$FUNCNAME" -> You must pass one argument : The branch name" 1>&2
 		exit 2
 	fi
-	echo -e "-----------------------------------------"
-	printf "|%-22s|%-16s|\n" "Projet" "Merge"
-	echo -e "-----------------------------------------"
+	echo -e "-----------------------------------------------"
+	printf "|%-28s|%-16s|\n" "Projet" "Merge"
+	echo -e "-----------------------------------------------"
 	browse gitMerge $1
-	echo -e "-----------------------------------------"
+	echo -e "-----------------------------------------------"
 	return 0
 }
 
 #-- execGitRemoteBranch
 # Execute gitRemoteBranch.
 execGitRemoteBranch(){
-	echo -e "-----------------------------------------------------"
-	printf "|%-22s|%-10s|%-10s|\n" "Projet" "Nb of Branches" "$IVVQ"
-	echo -e "-----------------------------------------------------"
+	echo -e "-----------------------------------------------------------"
+	printf "|%-28s|%-10s|%-10s|\n" "Projet" "Nb of Branches" "$IVVQ"
+	echo -e "-----------------------------------------------------------"
 	browse gitRemoteBranch
-	echo -e "-----------------------------------------------------"
+	echo -e "-----------------------------------------------------------"
 	return 0
 }
 #===============================================================================#
@@ -272,7 +272,7 @@ while [ $# -gt 0 ]; do
 		;;
 	merge-ivvq-to-master|mgi2m)
 		echo ${1};
-		;;	
+		;;
 	remote|re)
 		execGitRemoteBranch
 		;;
@@ -283,5 +283,3 @@ while [ $# -gt 0 ]; do
 	esac
 	shift
 done
-
-
