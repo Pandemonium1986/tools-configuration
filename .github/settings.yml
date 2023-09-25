@@ -1,6 +1,6 @@
 ---
 repository:
-  name: "tools-configuration "
+  name: "tools-configuration"
   description: "Personal configuration of different IT tools"
   # homepage: https://example.github.io/
   topics: "automation, tools, bash"
