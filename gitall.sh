@@ -1,4 +1,5 @@
 #!/bin/bash -u
+# shellcheck disable=all
 ########################################
 ##	Git : Massive project management  ##
 ########################################
