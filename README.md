@@ -2,7 +2,7 @@
 
 ![Github license](https://img.shields.io/github/license/Pandemonium1986/ansible-playbook-test.svg?logo=github)
 
-Personal configuration of different IT tools. This repo is useless but this is my first one
+Personal configuration of different IT tools. This repository is useless but this is my first one
 
 ## Contributing
 
