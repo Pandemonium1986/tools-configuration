@@ -9,10 +9,15 @@ IFS=$'\n\t'
 # Variables
 ################################################################################
 declare -ar FILES=(
+<<<<<<< HEAD
+=======
+  .actrc
+>>>>>>> 4c32a60 (feat: add dotfiles and dotfiles-repo-compare.sh)
   .ansible-lint
   .editorconfig
   .gitlint
   .hadolint.yaml
+<<<<<<< HEAD
   LICENSE
   .markdownlint.yaml
   .pre-commit-config.yaml
@@ -20,6 +25,15 @@ declare -ar FILES=(
 )
 
 declare -ar REPOS=(
+=======
+  .markdownlint.yaml
+  .pre-commit-config.yaml
+  .yamllint
+  LICENSE
+)
+
+declare -ar REPOS_ANSIBLE=(
+>>>>>>> 4c32a60 (feat: add dotfiles and dotfiles-repo-compare.sh)
   ansible-collection-k8s-toolbox
   ansible-collection-k8s-toolbox/roles/helm
   ansible-collection-k8s-toolbox/roles/k9s
@@ -32,6 +46,21 @@ declare -ar REPOS=(
   ansible-role-ohmyzsh
   ansible-role-pip
 )
+<<<<<<< HEAD
+=======
+
+declare -ar REPOS_DOCKER=(
+  docker-alpine318
+  docker-centos7
+  docker-debian12
+  docker-midgar
+  docker-sles15sp3
+  docker-sles15sp5
+  docker-tumbleweed
+  docker-ubuntu2204
+)
+
+>>>>>>> 4c32a60 (feat: add dotfiles and dotfiles-repo-compare.sh)
 declare -r LOCATION="${HOME}/git/pandemonium1986"
 
 ################################################################################
@@ -93,11 +122,15 @@ trap _exit SIGHUP SIGINT SIGQUIT SIGABRT SIGTERM
 
 declare -a arr_nsfod=()
 declare -a arr_diff=()
+declare -a repos=()
+
+repos+=("${REPOS_ANSIBLE[@]}")
+repos+=("${REPOS_DOCKER[@]}")
 
 # Kenel Code
 for file in "${FILES[@]}"
 do
-  for repo in "${REPOS[@]}"
+  for repo in "${repos[@]}"
   do
     dot_diff "${LOCATION}/template/${file}" "${LOCATION}/${repo}/${file}" arr_nsfod arr_diff
   done
