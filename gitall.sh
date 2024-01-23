@@ -4,7 +4,6 @@
 ##  Git : Massive project management  ##
 ########################################
 
-
 ####################
 # Global Variables #
 ####################
@@ -30,7 +29,7 @@ end=$'\e[0m'
 #-- usage
 # print usage on stdout.
 usage() {
-  cat << EOF
+  cat <<EOF
 Usage: $0 {git [--project|-p] command}
 Execute one of the massive git command
 Command available are
@@ -59,18 +58,15 @@ EOF
 #         ├───Project Name 2 Git 1
 #         ├───Project Name 2 Git 2
 #         └───Project Name 2 Git 3
-browse(){
-  if [[ -v WORKSPACE[@] ]]
-  then
-    for project in "${WORKSPACE[@]}"
-    do
+browse() {
+  if [[ -v WORKSPACE[@] ]]; then
+    for project in "${WORKSPACE[@]}"; do
       GIT_FOLDER=$GIT_HOME"/"${project:0:3}"/"$project
       cd $GIT_FOLDER
       $@
     done
   else
-    for GIT_FOLDER in `find $GIT_HOME -maxdepth 2 -mindepth 2 -type d`
-    do
+    for GIT_FOLDER in $(find $GIT_HOME -maxdepth 2 -mindepth 2 -type d); do
       cd $GIT_FOLDER
       $@
     done
@@ -82,9 +78,8 @@ browse(){
 # If behind he's red.
 # If ahead he's green.
 # Use for commit status
-colorCommit(){
-  if [[ $* == *"behind"* ]]
-  then
+colorCommit() {
+  if [[ $* == *"behind"* ]]; then
     RET="${red}"$*"${end}"
   else
     RET="${grn}"$*"${end}"
@@ -99,9 +94,8 @@ colorCommit(){
 # If there is 2 branch it's green.
 # If there is more than 2 branch it's blue.
 # Use for commit status
-colorBranch(){
-  if [ $1 -eq 2 ]
-  then
+colorBranch() {
+  if [ $1 -eq 2 ]; then
     RET="${grn}"$1"${end}"
   elif [ $1 -gt 2 ]; then
     RET="${cyn}"$1"${end}"
@@ -116,59 +110,57 @@ colorBranch(){
 # Check if is there is modification on the current git repo.
 # First check for file modifications with git status --porcelain
 # Second check for push/merge modifications with git st -sb
-gitStatus(){
+gitStatus() {
 
   if [ -n "$(git status --porcelain)" ]; then
     CHANGE_STATUS="${red}Yes${end}"
-    COMMIT_STATUS=`git st -sb | sed -n "s/^##.*\[\([^]]*\).*$/\1/p"`
-    COMMIT_STATUS=`colorCommit $COMMIT_STATUS`
+    COMMIT_STATUS=$(git st -sb | sed -n "s/^##.*\[\([^]]*\).*$/\1/p")
+    COMMIT_STATUS=$(colorCommit $COMMIT_STATUS)
   else
     CHANGE_STATUS="${grn}No${end}"
-    COMMIT_STATUS=`git st -sb | sed -n "s/^##.*\[\([^]]*\).*$/\1/p"`
-    COMMIT_STATUS=`colorCommit $COMMIT_STATUS`
+    COMMIT_STATUS=$(git st -sb | sed -n "s/^##.*\[\([^]]*\).*$/\1/p")
+    COMMIT_STATUS=$(colorCommit $COMMIT_STATUS)
   fi
-  printf "|%-28s|%-17s|%-31s|\n" `basename $GIT_FOLDER` "${CHANGE_STATUS}" "${COMMIT_STATUS}"
+  printf "|%-28s|%-17s|%-31s|\n" $(basename $GIT_FOLDER) "${CHANGE_STATUS}" "${COMMIT_STATUS}"
 }
 
 #-- gitFetch
 # Fecth prune the current repository.
 # Use progress to redirect output to stderr.
-gitFetch(){
+gitFetch() {
   if [ -n "$(git fetch -p --progress 2>&1)" ]; then
     FETCH_STATUS="${grn}Update${end}"
   else
     FETCH_STATUS="${cyn}No need${end}"
   fi
-  printf "|%-28s|%-18s|\n" `basename $GIT_FOLDER` "${FETCH_STATUS}"
+  printf "|%-28s|%-18s|\n" $(basename $GIT_FOLDER) "${FETCH_STATUS}"
 }
 
 #-- gitMerge
 # Merge the current repository only if fast forwadable
 # Merge the $1 branch
-gitMerge(){
+gitMerge() {
   if [ $# -ne 1 ]; then
     echo "Error : "$FUNCNAME" -> You must pass one argument : The branch name" 1>&2
     exit 2
   fi
   BRANCH=$1
   MERGE_RETURN=""
-  CHECK_BRANCH=`git ls-remote --exit-code . $BRANCH`
+  CHECK_BRANCH=$(git ls-remote --exit-code . $BRANCH)
   if [[ $? -eq 0 ]]; then
     git checkout -q $BRANCH
     MERGE_RETURN=$(git merge origin/$BRANCH --ff-only --progress 2>&1)
-    if [[ $MERGE_RETURN == *"Already up-to-date"* ]]
-    then
+    if [[ $MERGE_RETURN == *"Already up-to-date"* ]]; then
       MERGE_STATUS="${cyn}No need${end}"
-    elif [[ $MERGE_RETURN == *"Fast-forward"* ]]
-    then
+    elif [[ $MERGE_RETURN == *"Fast-forward"* ]]; then
       MERGE_STATUS="${grn}Update${end}"
     else
       MERGE_STATUS="${red}Error${end}"
     fi
-    printf "|%-28s|%-27s|\n" `basename $GIT_FOLDER` "${MERGE_STATUS}"
+    printf "|%-28s|%-27s|\n" $(basename $GIT_FOLDER) "${MERGE_STATUS}"
   else
     MERGE_RETURN="${mag}No $BRANCH${end}"
-    printf "|%-28s|%-27s|\n" `basename $GIT_FOLDER` "${MERGE_RETURN}"
+    printf "|%-28s|%-27s|\n" $(basename $GIT_FOLDER) "${MERGE_RETURN}"
   fi
 }
 
@@ -176,21 +168,21 @@ gitMerge(){
 # Count the number of branches available in the current repository
 # Then color the result
 # Check too if IVVQ branch exist in the current repository
-gitRemoteBranch(){
-  REMOTE_BRANCH=`git branch --remotes | grep -v HEAD | wc -l`
-  REMOTE_BRANCH=`colorBranch $REMOTE_BRANCH`
-  CHECK_IVVQ=`git ls-remote --exit-code . $IVVQ`
+gitRemoteBranch() {
+  REMOTE_BRANCH=$(git branch --remotes | grep -v HEAD | wc -l)
+  REMOTE_BRANCH=$(colorBranch $REMOTE_BRANCH)
+  CHECK_IVVQ=$(git ls-remote --exit-code . $IVVQ)
   if [[ $? -eq 0 ]]; then
     HAS_IVVQ="${grn}Yes${end}"
   else
     HAS_IVVQ="${red}No${end}"
   fi
-  printf "|%-28s|%-25s|%-24s|\n" `basename $GIT_FOLDER` "${REMOTE_BRANCH}" "${HAS_IVVQ}"
+  printf "|%-28s|%-25s|%-24s|\n" $(basename $GIT_FOLDER) "${REMOTE_BRANCH}" "${HAS_IVVQ}"
 }
 
 #-- execGitStatus
 # Execute gitStatus.
-execGitStatus(){
+execGitStatus() {
   echo -e "----------------------------------------------------------"
   printf "|%-28s|%-6s|%-20s|\n" "Projet" "Change" "Commit"
   echo -e "----------------------------------------------------------"
@@ -200,7 +192,7 @@ execGitStatus(){
 
 #-- execGitFetch
 # Execute gitFetch.
-execGitFetch(){
+execGitFetch() {
   echo -e "--------------------------------------"
   printf "|%-28s|%-7s|\n" "Projet" "Fecth"
   echo -e "--------------------------------------"
@@ -211,7 +203,7 @@ execGitFetch(){
 
 #-- execGitMerge
 # Execute gitMerge.
-execGitMerge(){
+execGitMerge() {
   if [ $# -ne 1 ]; then
     echo "Error : "$FUNCNAME" -> You must pass one argument : The branch name" 1>&2
     exit 2
@@ -226,7 +218,7 @@ execGitMerge(){
 
 #-- execGitRemoteBranch
 # Execute gitRemoteBranch.
-execGitRemoteBranch(){
+execGitRemoteBranch() {
   echo -e "-----------------------------------------------------------"
   printf "|%-28s|%-10s|%-10s|\n" "Projet" "Nb of Branches" "$IVVQ"
   echo -e "-----------------------------------------------------------"
@@ -247,40 +239,41 @@ fi
 
 while [ $# -gt 0 ]; do
   case "${1}" in
-  --help|-h)
+  --help | -h)
     usage
     exit 0
     ;;
-  --project=*|-p=*)
+  --project=* | -p=*)
     DIR="${1/#--/-}"
     DIRSUB="${DIR#*=}"
-    IFS=',' read -r -a WORKSPACE <<< "$DIRSUB"
+    IFS=',' read -r -a WORKSPACE <<<"$DIRSUB"
     ;;
-  status|st)
+  status | st)
     execGitStatus
     ;;
-  fetch|fc)
+  fetch | fc)
     execGitFetch
     ;;
-  merge-master|mgm)
+  merge-master | mgm)
     execGitMerge "master"
     ;;
-  merge-ivvq|mgi)
+  merge-ivvq | mgi)
     execGitMerge $IVVQ
     ;;
-  merge-master-to-ivvq|mgm2i)
-    echo ${1};
+  merge-master-to-ivvq | mgm2i)
+    echo ${1}
     ;;
-  merge-ivvq-to-master|mgi2m)
-    echo ${1};
+  merge-ivvq-to-master | mgi2m)
+    echo ${1}
     ;;
-  remote|re)
+  remote | re)
     execGitRemoteBranch
     ;;
   *)
     echo "Unknown argument : $1" 1>&2
     usage 1>&2
     exit 2
+    ;;
   esac
   shift
 done

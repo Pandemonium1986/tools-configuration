@@ -61,15 +61,14 @@ function _exit() {
   exit 255
 }
 
-
 #######################################
 # Check if I'm root or not
 # Returns:
 #  2 you are not root
 #######################################
 function am_i_root() {
-  if [ "$EUID" -ne 0 ]
-    then echo "Please run as root"
+  if [ "$EUID" -ne 0 ]; then
+    echo "Please run as root"
     exit 2
   fi
 }
@@ -96,8 +95,6 @@ function dot_diff() {
   fi
 }
 
-
-
 ################################################################################
 # Main execution
 ################################################################################
@@ -112,10 +109,8 @@ repos+=("${REPOS_ANSIBLE[@]}")
 repos+=("${REPOS_DOCKER[@]}")
 
 # Kenel Code
-for file in "${FILES[@]}"
-do
-  for repo in "${repos[@]}"
-  do
+for file in "${FILES[@]}"; do
+  for repo in "${repos[@]}"; do
     dot_diff "${LOCATION}/template/${file}" "${LOCATION}/${repo}/${file}" arr_nsfod arr_diff
   done
 done
