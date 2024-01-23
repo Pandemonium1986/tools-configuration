@@ -9,23 +9,11 @@ IFS=$'\n\t'
 # Variables
 ################################################################################
 declare -ar FILES=(
-<<<<<<< HEAD
-=======
   .actrc
->>>>>>> 4c32a60 (feat: add dotfiles and dotfiles-repo-compare.sh)
   .ansible-lint
   .editorconfig
   .gitlint
   .hadolint.yaml
-<<<<<<< HEAD
-  LICENSE
-  .markdownlint.yaml
-  .pre-commit-config.yaml
-  .yamllint
-)
-
-declare -ar REPOS=(
-=======
   .markdownlint.yaml
   .pre-commit-config.yaml
   .yamllint
@@ -33,7 +21,6 @@ declare -ar REPOS=(
 )
 
 declare -ar REPOS_ANSIBLE=(
->>>>>>> 4c32a60 (feat: add dotfiles and dotfiles-repo-compare.sh)
   ansible-collection-k8s-toolbox
   ansible-collection-k8s-toolbox/roles/helm
   ansible-collection-k8s-toolbox/roles/k9s
@@ -46,8 +33,6 @@ declare -ar REPOS_ANSIBLE=(
   ansible-role-ohmyzsh
   ansible-role-pip
 )
-<<<<<<< HEAD
-=======
 
 declare -ar REPOS_DOCKER=(
   docker-alpine318
@@ -60,7 +45,6 @@ declare -ar REPOS_DOCKER=(
   docker-ubuntu2204
 )
 
->>>>>>> 4c32a60 (feat: add dotfiles and dotfiles-repo-compare.sh)
 declare -r LOCATION="${HOME}/git/pandemonium1986"
 
 ################################################################################
