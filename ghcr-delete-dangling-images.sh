@@ -28,15 +28,13 @@ declare -a containers=(
 )
 temp_file="/tmp/ghcr_prune.ids"
 
-for container in "${containers[@]}"
-do
+for container in "${containers[@]}"; do
   echo "Fetching dangling images from GHCR for $container container..."
-  gh api "/user/packages/container/${container}/versions" --paginate > $temp_file
+  gh api "/user/packages/container/${container}/versions" --paginate >$temp_file
 
-  ids_to_delete=$(< "$temp_file" jq -r '.[] | select(.metadata.container.tags==[]) | .id')
+  ids_to_delete=$(jq <"$temp_file" -r '.[] | select(.metadata.container.tags==[]) | .id')
 
-  if [ "${ids_to_delete}" = "" ]
-  then
+  if [ "${ids_to_delete}" = "" ]; then
     echo "There are no dangling images to remove for this package"
   else
     echo -e "\nDeleting dangling images..."
@@ -45,7 +43,7 @@ do
       ## Workaround for https://github.com/cli/cli/issues/4286 and https://github.com/cli/cli/issues/3937
       echo -n | gh api --method DELETE "/user/packages/container/${container}/versions/${id}" --input -
       echo Dangling image with ID "$id" deleted successfully
-    done <<< "${ids_to_delete}"
+    done <<<"${ids_to_delete}"
   fi
 
   rm -rf "${temp_file}"
