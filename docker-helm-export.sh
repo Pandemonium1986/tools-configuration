@@ -12,7 +12,6 @@ declare -r DH_EXP_DKR_REGISTRY=${DKR_REGISTRY:-ghcr.io/pandemonium1986}
 declare -r DH_EXP_HLM_REGISTRY=${HLM_REGISTRY:-github-chart}
 declare -r DH_EXP_OUTPUT_DIR="/tmp"
 
-
 ################################################################################
 # Functions
 ################################################################################
@@ -75,7 +74,6 @@ function helm_pull_save() {
   helm pull "${DH_EXP_HLM_REGISTRY}/${_helm_chart_name}" --version "${_helm_chart_version}" --destination "${DH_EXP_OUTPUT_DIR}/docker-helm-export"
   return 0
 }
-
 
 ################################################################################
 # Main execution
