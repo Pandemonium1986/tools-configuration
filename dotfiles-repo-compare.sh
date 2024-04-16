@@ -11,6 +11,7 @@ IFS=$'\n\t'
 declare -ar FILES=(
   .actrc
   .ansible-lint
+  .checkov.yaml
   .editorconfig
   .gitlint
   .hadolint.yaml
